@@ -13,6 +13,14 @@
   ],
   "license": "MIT",
   "author": "Breimer Correa <breimerct@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/breimerct/brex.git"
+  },
+  "homepage": "https://github.com/breimerct/brex#readme",
+  "bugs": {
+    "url": "https://github.com/breimerct/brex/issues"
+  },
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
