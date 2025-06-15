@@ -278,6 +278,7 @@ Contributions are welcome! Here's how you can contribute to Brex:
 2. Clone your fork: `git clone https://github.com/your-username/brex.git`
 3. Install dependencies: `npm install`
 4. Build the project: `npm run build`
+5. Run tests: `npm run test`
 
 ### 📈 Development Workflow
 
