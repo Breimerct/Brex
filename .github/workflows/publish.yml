@@ -110,6 +110,12 @@ jobs:
           git push origin main
           git push origin "v${{ env.NEW_VERSION }}"
 
+      # fix pkg
+      - name: Fix package.json for publishing
+        run: npm pkg fix
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       # Publicar en NPM
       - name: Publish to NPM
         run: npm publish
