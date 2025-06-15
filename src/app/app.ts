@@ -1,5 +1,5 @@
-import { HttpClient } from '../client';
-import { HttpClientConfig, HttpResponse, RequestConfig } from '../types';
+import { HttpClient } from '@/client';
+import { HttpClientConfig, HttpResponse, RequestConfig } from '@/types';
 
 const defaultHttpClient = new HttpClient();
 

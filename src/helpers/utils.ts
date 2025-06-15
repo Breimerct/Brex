@@ -1,5 +1,5 @@
-import { HttpCode } from '../constants';
-import { HttpError, HttpHeaders, QueryParams } from '../types/http-client';
+import { HttpCode } from '@/constants';
+import { HttpError, HttpHeaders, QueryParams } from '@/types';
 
 export function buildURL(baseURL: string = '', endpoint: string, params?: QueryParams): string {
   const cleanBaseURL = baseURL.replace(/\/$/, '');

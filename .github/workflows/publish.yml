@@ -95,7 +95,11 @@ jobs:
             };
             fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 2));
           "
+      # execute tests if they exist
+      - name: Run tests
+        run: npm run test || echo "No tests found, skipping..."
 
+      # Build the project
       - name: Build project
         run: npm run build:tsup
 

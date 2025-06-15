@@ -5,7 +5,7 @@ import {
   createHttpError,
   createTimeoutSignal,
   getFetch,
-} from '../helpers';
+} from '@/helpers';
 import {
   QueryParams,
   HttpHeaders,
@@ -15,7 +15,7 @@ import {
   RequestConfig,
   HttpClientConfig,
   Interceptors,
-} from '../types';
+} from '@/types';
 
 export class HttpClient {
   private config: HttpClientConfig;
@@ -252,5 +252,9 @@ export class HttpClient {
 
   async request<T = any>(config: RequestConfig): Promise<HttpResponse<T>> {
     return this.makeRequest<T>(config);
+  }
+
+  getConfig(): HttpClientConfig {
+    return this.config;
   }
 }
