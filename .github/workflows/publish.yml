@@ -144,6 +144,12 @@ jobs:
       - name: Publish to GitHub Packages
         run: npm publish
         env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      # Publicar en NPM
+      - name: Publish to NPM
+        run: npm publish
+        env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # Create GitHub Release with attached files
