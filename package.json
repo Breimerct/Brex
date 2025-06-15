@@ -21,6 +21,9 @@
   "bugs": {
     "url": "https://github.com/breimerct/brex/issues"
   },
+  "publishConfig": {
+    "@Breimerct:registry": "https://npm.pkg.github.com"
+  },
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",

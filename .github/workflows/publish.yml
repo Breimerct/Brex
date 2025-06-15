@@ -1,5 +1,5 @@
-# Auto-increment version, publish NPM and create GitHub Release
-name: Auto Version, Publish and Release
+# Auto-increment version, publish to GitHub Packages and create GitHub Release
+name: Auto Version, Publish to GitHub Packages and Release
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   version-and-publish:
-    # Solo ejecutar en push a main o cuando se hace merge de PR
+    # Only run on push to main or when PR is merged
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event.pull_request.merged == true)
     runs-on: ubuntu-latest
 
@@ -29,22 +29,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22.15.0'
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@${{ github.repository_owner }}'
           cache: 'npm'
 
       - name: Configure Git
         run: |
-          git config --local user.email ${{ secrets.GH_EMAIL }}
-          git config --local user.name "Breimerct"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
 
       - name: Install dependencies
         run: npm ci
 
-      # Determinar tipo de version bump basado en el commit
+      # Determine version bump type based on commit
       - name: Determine version bump
         id: version_bump
         run: |
-          # Obtener el último commit message
+          # Get the latest commit message
           COMMIT_MSG=$(git log -1 --pretty=%B)
 
           if [[ $COMMIT_MSG == *"BREAKING CHANGE"* ]] || [[ $COMMIT_MSG == *"major:"* ]]; then
@@ -55,7 +56,7 @@ jobs:
             echo "bump=patch" >> $GITHUB_OUTPUT
           fi
 
-      # Obtener la versión anterior para el changelog
+      # Get previous version for changelog
       - name: Get previous version
         id: prev_version
         run: |
@@ -63,17 +64,42 @@ jobs:
           echo "PREV_VERSION=$PREV_VERSION" >> $GITHUB_ENV
           echo "Previous version: $PREV_VERSION"
 
-      # Incrementar versión
+      # Increment version
       - name: Bump version
         run: |
           npm version ${{ steps.version_bump.outputs.bump }} --no-git-tag-version
           NEW_VERSION=$(node -p "require('./package.json').version")
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
+      # Configure package.json for GitHub Packages
+      - name: Configure package for GitHub Packages
+        run: |
+          # Get current package name
+          CURRENT_NAME=$(node -p "require('./package.json').name")
+
+          # If it doesn't have a scope, add it
+          if [[ $CURRENT_NAME != @* ]]; then
+            SCOPED_NAME="@${{ github.repository_owner }}/$CURRENT_NAME"
+          else
+            SCOPED_NAME="$CURRENT_NAME"
+          fi
+
+          # Update package.json with GitHub Packages configuration
+          node -e "
+            const fs = require('fs');
+            const pkg = require('./package.json');
+            pkg.name = '$SCOPED_NAME';
+            pkg.repository = pkg.repository || 'https://github.com/${{ github.repository }}';
+            pkg.publishConfig = {
+              '@${{ github.repository_owner }}:registry': 'https://npm.pkg.github.com'
+            };
+            fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 2));
+          "
+
       - name: Build project
         run: npm run build:tsup
 
-      # Generar notas de release automáticamente
+      # Generate release notes automatically
       - name: Generate release notes
         id: release_notes
         run: |
@@ -81,7 +107,7 @@ jobs:
           echo "## 🚀 What's Changed" >> $GITHUB_ENV
           echo "" >> $GITHUB_ENV
 
-          # Obtener commits desde la última versión
+          # Get commits since the last version
           if [ "${{ env.PREV_VERSION }}" != "v0.0.0" ]; then
             git log ${{ env.PREV_VERSION }}..HEAD --pretty=format:"- %s" --reverse >> $GITHUB_ENV
           else
@@ -90,18 +116,18 @@ jobs:
 
           echo "" >> $GITHUB_ENV
           echo "" >> $GITHUB_ENV
-          echo "## 📦 Installation" >> $GITHUB_ENV
+          echo "## 📦 Installation from GitHub Packages" >> $GITHUB_ENV
           echo '```bash' >> $GITHUB_ENV
           echo "npm install $(node -p "require('./package.json').name")@${{ env.NEW_VERSION }}" >> $GITHUB_ENV
           echo '```' >> $GITHUB_ENV
           echo "" >> $GITHUB_ENV
-          echo "## 🌐 CDN" >> $GITHUB_ENV
-          echo '```html' >> $GITHUB_ENV
-          echo '<script src="https://cdn.jsdelivr.net/npm/$(node -p "require('\''./package.json'\'').name")@${{ env.NEW_VERSION }}/dist/index.js"></script>' >> $GITHUB_ENV
+          echo "### 🔧 Configure .npmrc for GitHub Packages" >> $GITHUB_ENV
+          echo '```' >> $GITHUB_ENV
+          echo "@${{ github.repository_owner }}:registry=https://npm.pkg.github.com" >> $GITHUB_ENV
           echo '```' >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
-      # Commit y push de la nueva versión
+      # Commit and push the new version
       - name: Commit version bump
         run: |
           git add package.json package-lock.json
@@ -110,19 +136,13 @@ jobs:
           git push origin main
           git push origin "v${{ env.NEW_VERSION }}"
 
-      # fix pkg
-      - name: Fix package.json for publishing
-        run: npm pkg fix
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      # Publicar en NPM
-      - name: Publish to NPM
+      # Publish to GitHub Packages
+      - name: Publish to GitHub Packages
         run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GH_TOKEN }}
 
-      # Crear GitHub Release con archivos adjuntos
+      # Create GitHub Release with attached files
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -131,7 +151,7 @@ jobs:
           body: ${{ env.RELEASE_NOTES }}
           draft: false
           prerelease: false
-          generate_release_notes: true # Genera notas adicionales automáticamente
+          generate_release_notes: true # Generates additional notes automatically
           files: |
             dist/*.js
             dist/*.d.ts
@@ -140,11 +160,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
-      # Notificación de éxito con links
+      # Success notification with links
       - name: Success notification
         run: |
           echo "✅ Release created successfully!"
-          echo "📦 NPM: https://www.npmjs.com/package/$(node -p "require('./package.json').name")"
+          echo "📦 GitHub Packages: https://github.com/${{ github.repository }}/packages"
           echo "🏷️ Release: https://github.com/${{ github.repository }}/releases/tag/v${{ env.NEW_VERSION }}"
-          echo "🌐 CDN: https://cdn.jsdelivr.net/npm/$(node -p "require('./package.json').name")@${{ env.NEW_VERSION }}/"
           echo "🔖 Version: v${{ env.NEW_VERSION }}"
+          echo ""
+          echo "📋 To install this package:"
+          echo "npm install $(node -p "require('./package.json').name")@${{ env.NEW_VERSION }}"
+          echo ""
+          echo "🔧 Configure .npmrc:"
+          echo "@${{ github.repository_owner }}:registry=https://npm.pkg.github.com"
