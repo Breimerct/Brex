@@ -1,0 +1,20 @@
+name: 'Investigation Issue 🔍'
+description: 'Issue for problem investigation or information gathering'
+title: '[INVESTIGATE] '
+labels: ['investigation']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please provide details about the problem requiring investigation.
+
+  - type: textarea
+    id: problem-description
+    attributes:
+      label: Problem Description
+      description: Describe the problem requiring investigation
+      placeholder: |
+        What is the issue or question that needs investigation?
+        Please provide as much detail as possible.
+    validations:
+      required: true
