@@ -275,7 +275,7 @@ Contributions are welcome! Here's how you can contribute to Brex:
 ### 🛠️ Setting up the Development Environment
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/your-username/brex.git`
+2. Clone your fork: `git clone https://github.com/breimerct/brex.git`
 3. Install dependencies: `npm install`
 4. Build the project: `npm run build`
 5. Run tests: `npm run test`
