@@ -1,6 +1,6 @@
 {
   "name": "@breimerct/brex",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "keywords": [
     "http",
@@ -28,7 +28,13 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "build:tsup": "tsup"
+    "build:tsup": "tsup",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run lint && npm run format:check",
+    "prepare": "husky"
   },
   "typesVersions": {
     "*": {
@@ -53,12 +59,28 @@
     "dist"
   ],
   "devDependencies": {
+    "@commitlint/config-conventional": "^19.8.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.1",
     "nodemon": "^3.1.10",
+    "oxlint": "^1.1.0",
+    "prettier": "^3.5.3",
     "ts-node": "^10.9.2",
     "tsup": "^8.5.0",
     "typescript": "^5.8.3"
   },
   "dependencies": {
     "node-fetch": "^3.3.2"
+  },
+  "lint-staged": {
+    "*.{js,ts,json,ts}": [
+      "npm run lint:fix",
+      "git add"
+    ]
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
   }
 }

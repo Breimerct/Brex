@@ -1,0 +1,15 @@
+{
+  "rules": {
+    "no-unused-vars": ["warn"]
+  },
+  "plugins": ["typescript"],
+  "env": {
+    "es2022": true,
+    "node": true,
+    "browser": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module"
+  }
+}

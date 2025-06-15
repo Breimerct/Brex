@@ -34,10 +34,10 @@ pnpm add @breimerct/brex
 ### 🌱 Basic Example
 
 ```typescript
-import { GET, POST, PUT, DELETE } from "@breimerct/brex";
+import { GET, POST, PUT, DELETE } from '@breimerct/brex';
 
 // Simple GET request
-GET("https://api.example.com/users").then((response) => {
+GET('https://api.example.com/users').then((response) => {
   if (!response.error) {
     console.log(response.content);
   } else {
@@ -46,19 +46,19 @@ GET("https://api.example.com/users").then((response) => {
 });
 
 // POST request with body
-POST("https://api.example.com/users", {
-  name: "John Doe",
-  email: "john@example.com",
+POST('https://api.example.com/users', {
+  name: 'John Doe',
+  email: 'john@example.com',
 }).then((response) => console.log(response.content));
 
 // PUT request
-PUT("https://api.example.com/users/1", {
-  name: "Updated Name",
+PUT('https://api.example.com/users/1', {
+  name: 'Updated Name',
 }).then((response) => console.log(response.status));
 
 // DELETE request
-DELETE("https://api.example.com/users/1").then((response) =>
-  console.log("User deleted:", !response.error)
+DELETE('https://api.example.com/users/1').then((response) =>
+  console.log('User deleted:', !response.error),
 );
 ```
 
@@ -72,13 +72,13 @@ interface User {
 }
 
 // Type-safe responses
-GET<User[]>("https://api.example.com/users").then((response) => {
+GET<User[]>('https://api.example.com/users').then((response) => {
   const users = response.content;
   users.forEach((user) => console.log(user.name));
 });
 
 // Type-safe single response
-GET<User>("https://api.example.com/users/1").then((response) => {
+GET<User>('https://api.example.com/users/1').then((response) => {
   const user = response.content;
   console.log(user.email);
 });
@@ -87,59 +87,59 @@ GET<User>("https://api.example.com/users/1").then((response) => {
 ### ⚙️ Creating a Custom Client
 
 ```typescript
-import { createBrexClient, Brex } from "@breimerct/brex";
+import { createBrexClient, Brex } from '@breimerct/brex';
 
 // Create a custom client with configuration
 const api = createBrexClient({
-  baseURL: "https://api.example.com",
+  baseURL: 'https://api.example.com',
   headers: {
-    Authorization: "Bearer your-token",
-    "Content-Type": "application/json",
+    Authorization: 'Bearer your-token',
+    'Content-Type': 'application/json',
   },
   timeout: 5000, // 5 seconds
 });
 
 // Use the custom client
-api.get("/users").then((response) => console.log(response.content));
+api.get('/users').then((response) => console.log(response.content));
 
 // Chain configuration methods
 api
-  .setHeader("X-API-Key", "your-api-key")
+  .setHeader('X-API-Key', 'your-api-key')
   .setTimeout(10000)
-  .get("/users/premium")
+  .get('/users/premium')
   .then((response) => console.log(response.content));
 
 // Or use the Brex class directly
 const client = new Brex({
-  baseURL: "https://api.example.com",
+  baseURL: 'https://api.example.com',
 });
 
-client.get("/users").then((response) => console.log(response.content));
+client.get('/users').then((response) => console.log(response.content));
 ```
 
 ### 🔌 Using Interceptors
 
 ```typescript
-import { createBrexClient } from "@breimerct/brex";
+import { createBrexClient } from '@breimerct/brex';
 
 const api = createBrexClient({
-  baseURL: "https://api.example.com",
+  baseURL: 'https://api.example.com',
 });
 
 // Add request interceptor
 api.addRequestInterceptor((config) => {
-  console.log("Request:", config);
+  console.log('Request:', config);
   // Add authentication token
   config.headers = {
     ...config.headers,
-    Authorization: "Bearer " + localStorage.getItem("token"),
+    Authorization: 'Bearer ' + localStorage.getItem('token'),
   };
   return config;
 });
 
 // Add response interceptor
 api.addResponseInterceptor((response) => {
-  console.log("Response:", response);
+  console.log('Response:', response);
   // Transform response data
   if (response.content && !response.error) {
     response.content = response.content.data;
@@ -148,27 +148,27 @@ api.addResponseInterceptor((response) => {
 });
 
 // Make requests with interceptors applied
-api.get("/users").then((response) => console.log(response.content));
+api.get('/users').then((response) => console.log(response.content));
 ```
 
 ### ⚠️ Error Handling
 
 ```typescript
-import { GET } from "@breimerct/brex";
+import { GET } from '@breimerct/brex';
 
-GET("https://api.example.com/users")
+GET('https://api.example.com/users')
   .then((response) => {
     if (response.error) {
       console.error(`Error ${response.status}: ${response.error.message}`);
-      console.error("Error code:", response.error.code);
+      console.error('Error code:', response.error.code);
       return;
     }
 
-    console.log("Success:", response.content);
+    console.log('Success:', response.content);
   })
   .catch((error) => {
     // This catches network errors or other exceptions
-    console.error("Unexpected error:", error);
+    console.error('Unexpected error:', error);
   });
 ```
 
@@ -188,8 +188,8 @@ The `HttpClient` class (exported as `Brex`) provides more control:
 
 ```typescript
 const client = new Brex({
-  baseURL: "https://api.example.com",
-  headers: { "Content-Type": "application/json" },
+  baseURL: 'https://api.example.com',
+  headers: { 'Content-Type': 'application/json' },
   timeout: 30000,
 });
 ```

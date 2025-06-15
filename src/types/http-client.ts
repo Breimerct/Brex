@@ -1,33 +1,26 @@
-export type HttpMethod =
-  | "GET"
-  | "POST"
-  | "PUT"
-  | "DELETE"
-  | "PATCH"
-  | "HEAD"
-  | "OPTIONS";
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS';
 
 export type HttpHeaders = {
   Accept?: string;
-  "Accept-Encoding"?: string;
-  "Accept-Language"?: string;
+  'Accept-Encoding'?: string;
+  'Accept-Language'?: string;
   Authorization?: string;
-  "Cache-Control"?: string;
-  "Content-Type"?:
-    | "application/json"
-    | "application/x-www-form-urlencoded"
-    | "multipart/form-data"
-    | "text/plain"
-    | "text/html"
+  'Cache-Control'?: string;
+  'Content-Type'?:
+    | 'application/json'
+    | 'application/x-www-form-urlencoded'
+    | 'multipart/form-data'
+    | 'text/plain'
+    | 'text/html'
     | string;
   Cookie?: string;
   Host?: string;
   Origin?: string;
   Referer?: string;
-  "User-Agent"?: string;
-  "X-Requested-With"?: string;
-  "X-CSRF-Token"?: string;
-  "X-API-Key"?: string;
+  'User-Agent'?: string;
+  'X-Requested-With'?: string;
+  'X-CSRF-Token'?: string;
+  'X-API-Key'?: string;
   [key: string]: string | undefined;
 };
 
@@ -45,12 +38,10 @@ export interface HttpResponse<T = any> {
   status: number;
 }
 
-export type RequestInterceptor = (
-  config: RequestConfig
-) => RequestConfig | Promise<RequestConfig>;
+export type RequestInterceptor = (config: RequestConfig) => RequestConfig | Promise<RequestConfig>;
 
 export type ResponseInterceptor = <T>(
-  response: HttpResponse<T>
+  response: HttpResponse<T>,
 ) => HttpResponse<T> | Promise<HttpResponse<T>>;
 
 export interface Interceptors {

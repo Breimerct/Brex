@@ -1,2 +1,2 @@
-export * from "./utils";
-export * from "./get-fetch";
+export * from './utils';
+export * from './get-fetch';

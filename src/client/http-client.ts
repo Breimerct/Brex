@@ -5,7 +5,7 @@ import {
   createHttpError,
   createTimeoutSignal,
   getFetch,
-} from "../helpers";
+} from '../helpers';
 import {
   QueryParams,
   HttpHeaders,
@@ -15,7 +15,7 @@ import {
   RequestConfig,
   HttpClientConfig,
   Interceptors,
-} from "../types";
+} from '../types';
 
 export class HttpClient {
   private config: HttpClientConfig;
@@ -75,9 +75,7 @@ export class HttpClient {
     return this;
   }
 
-  private async applyRequestInterceptors(
-    config: RequestConfig
-  ): Promise<RequestConfig> {
+  private async applyRequestInterceptors(config: RequestConfig): Promise<RequestConfig> {
     let processedConfig = config;
 
     for (const interceptor of this.interceptors.request) {
@@ -87,9 +85,7 @@ export class HttpClient {
     return processedConfig;
   }
 
-  private async applyResponseInterceptors<T>(
-    response: HttpResponse<T>
-  ): Promise<HttpResponse<T>> {
+  private async applyResponseInterceptors<T>(response: HttpResponse<T>): Promise<HttpResponse<T>> {
     let processedResponse = response;
 
     for (const interceptor of this.interceptors.response) {
@@ -99,9 +95,7 @@ export class HttpClient {
     return processedResponse;
   }
 
-  private async makeRequest<T = any>(
-    config: RequestConfig
-  ): Promise<HttpResponse<T>> {
+  private async makeRequest<T = any>(config: RequestConfig): Promise<HttpResponse<T>> {
     try {
       const mergedConfig: RequestConfig = {
         ...config,
@@ -112,11 +106,7 @@ export class HttpClient {
 
       const processedConfig = await this.applyRequestInterceptors(mergedConfig);
 
-      const fullURL = buildURL(
-        this.config.baseURL,
-        processedConfig.url,
-        processedConfig.params
-      );
+      const fullURL = buildURL(this.config.baseURL, processedConfig.url, processedConfig.params);
 
       const fetchOptions: RequestInit = {
         method: processedConfig.method,
@@ -124,17 +114,14 @@ export class HttpClient {
         signal: createTimeoutSignal(processedConfig.timeout!),
       };
 
-      if (
-        processedConfig.body &&
-        !["GET", "HEAD"].includes(processedConfig.method)
-      ) {
-        if (typeof processedConfig.body === "object") {
+      if (processedConfig.body && !['GET', 'HEAD'].includes(processedConfig.method)) {
+        if (typeof processedConfig.body === 'object') {
           fetchOptions.body = JSON.stringify(processedConfig.body);
 
-          if (!processedConfig.headers?.["Content-Type"]) {
+          if (!processedConfig.headers?.['Content-Type']) {
             fetchOptions.headers = {
               ...(fetchOptions.headers as Record<string, string>),
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json',
             };
           }
         } else {
@@ -147,11 +134,11 @@ export class HttpClient {
       const response = await fetchFn(fullURL, fetchOptions);
 
       let content: T;
-      const contentType = response.headers.get("Content-Type") || "";
+      const contentType = response.headers.get('Content-Type') || '';
 
-      if (contentType.includes("application/json")) {
+      if (contentType.includes('application/json')) {
         content = await response.json();
-      } else if (contentType.includes("text/")) {
+      } else if (contentType.includes('text/')) {
         content = (await response.text()) as T;
       } else {
         content = (await response.blob()) as T;
@@ -163,7 +150,7 @@ export class HttpClient {
           ? null
           : createHttpError(
               `HTTP Error: ${response.status} ${response.statusText}`,
-              response.status
+              response.status,
             ),
         status: response.status,
       };
@@ -182,11 +169,11 @@ export class HttpClient {
 
   async get<T = any>(
     url: string,
-    config?: Partial<Omit<RequestConfig, "method">>
+    config?: Partial<Omit<RequestConfig, 'method'>>,
   ): Promise<HttpResponse<T>> {
     return this.makeRequest<T>({
       url,
-      method: "GET",
+      method: 'GET',
       ...config,
     });
   }
@@ -194,11 +181,11 @@ export class HttpClient {
   async post<T = any>(
     url: string,
     body?: any,
-    config?: Partial<Omit<RequestConfig, "method">>
+    config?: Partial<Omit<RequestConfig, 'method'>>,
   ): Promise<HttpResponse<T>> {
     return this.makeRequest<T>({
       url,
-      method: "POST",
+      method: 'POST',
       body,
       ...config,
     });
@@ -207,11 +194,11 @@ export class HttpClient {
   async put<T = any>(
     url: string,
     body?: any,
-    config?: Partial<Omit<RequestConfig, "method">>
+    config?: Partial<Omit<RequestConfig, 'method'>>,
   ): Promise<HttpResponse<T>> {
     return this.makeRequest<T>({
       url,
-      method: "PUT",
+      method: 'PUT',
       body,
       ...config,
     });
@@ -219,11 +206,11 @@ export class HttpClient {
 
   async delete<T = any>(
     url: string,
-    config?: Partial<Omit<RequestConfig, "method">>
+    config?: Partial<Omit<RequestConfig, 'method'>>,
   ): Promise<HttpResponse<T>> {
     return this.makeRequest<T>({
       url,
-      method: "DELETE",
+      method: 'DELETE',
       ...config,
     });
   }
@@ -231,11 +218,11 @@ export class HttpClient {
   async patch<T = any>(
     url: string,
     body?: any,
-    config?: Partial<Omit<RequestConfig, "method">>
+    config?: Partial<Omit<RequestConfig, 'method'>>,
   ): Promise<HttpResponse<T>> {
     return this.makeRequest<T>({
       url,
-      method: "PATCH",
+      method: 'PATCH',
       body,
       ...config,
     });
@@ -243,22 +230,22 @@ export class HttpClient {
 
   async head<T = any>(
     url: string,
-    config?: Partial<Omit<RequestConfig, "method">>
+    config?: Partial<Omit<RequestConfig, 'method'>>,
   ): Promise<HttpResponse<T>> {
     return this.makeRequest<T>({
       url,
-      method: "HEAD",
+      method: 'HEAD',
       ...config,
     });
   }
 
   async options<T = any>(
     url: string,
-    config?: Partial<Omit<RequestConfig, "method">>
+    config?: Partial<Omit<RequestConfig, 'method'>>,
   ): Promise<HttpResponse<T>> {
     return this.makeRequest<T>({
       url,
-      method: "OPTIONS",
+      method: 'OPTIONS',
       ...config,
     });
   }

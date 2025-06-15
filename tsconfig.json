@@ -67,6 +67,7 @@
     "src/__mocks__",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
-    "tsup.config.ts"
+    "tsup.config.ts",
+    "oxlint.ts"
   ]
 }
