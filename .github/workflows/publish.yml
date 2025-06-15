@@ -380,7 +380,7 @@ jobs:
             echo "5. ✅ GitHub Release created"
             echo ""
             echo "### 🔗 Links:"
-            echo "- 📦 [NPM Package](https://www.npmjs.com/package/$(echo '${{ github.repository }}' | cut -d'/' -f2))"
+            echo "- 📦 [NPM Package](https://www.npmjs.com/package/$(node -p "require('./package.json').name")"
             echo "- 📦 [GitHub Packages](https://github.com/${{ github.repository }}/packages)"
             echo "- 🏷️ [Release](https://github.com/${{ github.repository }}/releases/tag/v${{ needs.version.outputs.new_version }})"
           else
