@@ -1,0 +1,47 @@
+name: Feature Request 🚀
+description: Suggest a new idea for this project
+title: '[FEAT] '
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share your feature idea with us. Please be specific.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem does this feature solve?
+      placeholder: |
+        Describe the problem you're trying to solve.
+        Why is this feature important?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: proposed-solution
+      description: How should this feature work?
+      placeholder: |
+        Describe how you envision this feature working.
+        What are the key functionalities?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Other solutions you've considered.
+      placeholder: |
+        Have you considered other solutions or workarounds?
+        If so, what are they?
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add screenshots, links, or other relevant info.
+      placeholder: Related issues or documentation.
