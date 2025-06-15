@@ -34,7 +34,7 @@ pnpm add @breimerct/brex
 ### 🌱 Basic Example
 
 ```typescript
-import { GET, POST, PUT, DELETE } from '@breimerct/brex';
+import { GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS } from '@breimerct/brex';
 
 // Simple GET request
 GET('https://api.example.com/users').then((response) => {
@@ -60,6 +60,23 @@ PUT('https://api.example.com/users/1', {
 DELETE('https://api.example.com/users/1').then((response) =>
   console.log('User deleted:', !response.error),
 );
+
+// PATCH request
+PATCH('https://api.example.com/users/1', {
+  email: 'john.new@example.com',
+}).then((response) => {
+  console.log('User updated:', !response.error);
+});
+
+// HEAD request
+HEAD('https://api.example.com/users/1').then((response) => {
+  console.log('Response headers:', response.headers);
+});
+
+// OPTIONS request
+OPTIONS('https://api.example.com/users').then((response) => {
+  console.log('Allowed methods:', response.headers['allow']);
+});
 ```
 
 ### 📘 Using with TypeScript
