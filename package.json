@@ -1,0 +1,56 @@
+{
+  "name": "@breimerct/brex",
+  "version": "1.8.2",
+  "description": "",
+  "keywords": [
+    "http",
+    "js",
+    "ts",
+    "typescript",
+    "javascript",
+    "fetch",
+    "request"
+  ],
+  "license": "MIT",
+  "author": "Breimer Correa <breimerct@gmail.com>",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "unpkg": "dist/index.global.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:tsup": "tsup"
+  },
+  "typesVersions": {
+    "*": {
+      "dist/index.cjs": [
+        "dist/index.d.cts"
+      ]
+    }
+  },
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
+}
