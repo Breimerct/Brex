@@ -598,8 +598,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🤝 Contributors
 
-<a href="https://github.com/breimerct/@breimerct/brex/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=breimerct/brever.link" />
+<a href="https://github.com/Breimerct/Brex/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Breimerct/Brex" />
 </a>
 
 ## Author
