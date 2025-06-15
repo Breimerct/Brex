@@ -5,7 +5,7 @@ import {
   createHttpError,
   createTimeoutSignal,
   getFetch,
-} from '@/helpers';
+} from '../helpers';
 import {
   QueryParams,
   HttpHeaders,
@@ -15,7 +15,7 @@ import {
   RequestConfig,
   HttpClientConfig,
   Interceptors,
-} from '@/types';
+} from '../types';
 
 export class HttpClient {
   private config: HttpClientConfig;
