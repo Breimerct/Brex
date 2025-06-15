@@ -1,5 +1,5 @@
-# Opción 1: Auto-increment version en cada push a main
-name: Auto Version and Publish
+# Auto-increment version, publish NPM and create GitHub Release
+name: Auto Version, Publish and Release
 
 on:
   push:
@@ -14,11 +14,14 @@ jobs:
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event.pull_request.merged == true)
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+      packages: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          # Necesario para poder hacer commits
           token: ${{ secrets.GH_TOKEN }}
           fetch-depth: 0
 
@@ -52,6 +55,14 @@ jobs:
             echo "bump=patch" >> $GITHUB_OUTPUT
           fi
 
+      # Obtener la versión anterior para el changelog
+      - name: Get previous version
+        id: prev_version
+        run: |
+          PREV_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "PREV_VERSION=$PREV_VERSION" >> $GITHUB_ENV
+          echo "Previous version: $PREV_VERSION"
+
       # Incrementar versión
       - name: Bump version
         run: |
@@ -61,6 +72,34 @@ jobs:
 
       - name: Build project
         run: npm run build:tsup
+
+      # Generar notas de release automáticamente
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+          echo "## 🚀 What's Changed" >> $GITHUB_ENV
+          echo "" >> $GITHUB_ENV
+
+          # Obtener commits desde la última versión
+          if [ "${{ env.PREV_VERSION }}" != "v0.0.0" ]; then
+            git log ${{ env.PREV_VERSION }}..HEAD --pretty=format:"- %s" --reverse >> $GITHUB_ENV
+          else
+            git log --pretty=format:"- %s" --reverse >> $GITHUB_ENV
+          fi
+
+          echo "" >> $GITHUB_ENV
+          echo "" >> $GITHUB_ENV
+          echo "## 📦 Installation" >> $GITHUB_ENV
+          echo '```bash' >> $GITHUB_ENV
+          echo "npm install $(node -p "require('./package.json').name")@${{ env.NEW_VERSION }}" >> $GITHUB_ENV
+          echo '```' >> $GITHUB_ENV
+          echo "" >> $GITHUB_ENV
+          echo "## 🌐 CDN" >> $GITHUB_ENV
+          echo '```html' >> $GITHUB_ENV
+          echo '<script src="https://cdn.jsdelivr.net/npm/$(node -p "require('\''./package.json'\'').name")@${{ env.NEW_VERSION }}/dist/index.js"></script>' >> $GITHUB_ENV
+          echo '```' >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       # Commit y push de la nueva versión
       - name: Commit version bump
@@ -77,9 +116,29 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Notificación de éxito
+      # Crear GitHub Release con archivos adjuntos
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.NEW_VERSION }}
+          name: Release v${{ env.NEW_VERSION }}
+          body: ${{ env.RELEASE_NOTES }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true # Genera notas adicionales automáticamente
+          files: |
+            dist/*.js
+            dist/*.d.ts
+            package.json
+            README.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      # Notificación de éxito con links
       - name: Success notification
         run: |
-          echo "✅ Package published successfully!"
-          echo "📦 Package: $(npm list --depth=0 | head -1)"
-          echo "🔗 NPM: https://www.npmjs.com/package/$(node -p "require('./package.json').name")"
+          echo "✅ Release created successfully!"
+          echo "📦 NPM: https://www.npmjs.com/package/$(node -p "require('./package.json').name")"
+          echo "🏷️ Release: https://github.com/${{ github.repository }}/releases/tag/v${{ env.NEW_VERSION }}"
+          echo "🌐 CDN: https://cdn.jsdelivr.net/npm/$(node -p "require('./package.json').name")@${{ env.NEW_VERSION }}/"
+          echo "🔖 Version: v${{ env.NEW_VERSION }}"
