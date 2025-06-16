@@ -143,18 +143,18 @@ describe('HttpClient', () => {
       .setParam('sort', 'asc')
       .setTimeout(5000);
 
-    const config = client.getConfig();
+    const { baseURL: configBaseUrl, headers, params, timeout } = client.getConfig;
 
-    expect(config.baseURL).toBe(baseURL);
-    expect(config.headers).toEqual({
+    expect(configBaseUrl).toBe(baseURL);
+    expect(headers).toEqual({
       Authorization: 'Bearer token',
       'Custom-Header': 'CustomValue',
     });
-    expect(config.params).toEqual({
+    expect(params).toEqual({
       page: 1,
       limit: 10,
       sort: 'asc',
     });
-    expect(config.timeout).toBe(5000);
+    expect(timeout).toBe(5000);
   });
 });
