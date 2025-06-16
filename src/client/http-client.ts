@@ -24,11 +24,7 @@ export class HttpClient {
     baseURL: '',
     headers: {},
     params: {},
-    timeout: 30000,
-    interceptors: {
-      request: [],
-      response: [],
-    },
+    timeout: 30000
   };
 
   constructor(config: HttpClientConfig = this.initValues) {
