@@ -20,14 +20,8 @@ import {
 export class HttpClient {
   private config: HttpClientConfig;
   private interceptors: Interceptors;
-  private initValues: HttpClientConfig = {
-    baseURL: '',
-    headers: {},
-    params: {},
-    timeout: 30000
-  };
 
-  constructor(config: HttpClientConfig = this.initValues) {
+  constructor(config: HttpClientConfig = {}) {
     this.config = config;
     this.interceptors = {
       request: config.interceptors?.request || [],
@@ -111,7 +105,7 @@ export class HttpClient {
         ...config,
         headers: mergeHeaders(this.config.headers, config.headers),
         params: mergeParams(this.config.params, config.params),
-        timeout: config.timeout || this.config.timeout || this.initValues.timeout,
+        timeout: config.timeout || this.config.timeout || 30000,
       };
 
       const processedConfig = await this.applyRequestInterceptors(mergedConfig);
