@@ -20,8 +20,18 @@ import {
 export class HttpClient {
   private config: HttpClientConfig;
   private interceptors: Interceptors;
+  private initValues: HttpClientConfig = {
+    baseURL: '',
+    headers: {},
+    params: {},
+    timeout: 30000,
+    interceptors: {
+      request: [],
+      response: [],
+    },
+  };
 
-  constructor(config: HttpClientConfig = {}) {
+  constructor(config: HttpClientConfig = this.initValues) {
     this.config = config;
     this.interceptors = {
       request: config.interceptors?.request || [],
@@ -29,17 +39,17 @@ export class HttpClient {
     };
   }
 
-  setBaseURL(baseURL: string): HttpClient {
+  setBaseURL(baseURL: string) {
     this.config.baseURL = baseURL;
     return this;
   }
 
-  setHeaders(headers: HttpHeaders): HttpClient {
+  setHeaders(headers: HttpHeaders) {
     this.config.headers = mergeHeaders(this.config.headers, headers);
     return this;
   }
 
-  setHeader(key: keyof HttpHeaders, value: string): HttpClient {
+  setHeader(key: keyof HttpHeaders, value: string) {
     if (!this.config.headers) {
       this.config.headers = {};
     }
@@ -47,12 +57,12 @@ export class HttpClient {
     return this;
   }
 
-  setParams(params: QueryParams): HttpClient {
+  setParams(params: QueryParams) {
     this.config.params = mergeParams(this.config.params, params);
     return this;
   }
 
-  setParam(key: string, value: string | number | boolean): HttpClient {
+  setParam(key: string, value: string | number | boolean) {
     if (!this.config.params) {
       this.config.params = {};
     }
@@ -60,22 +70,26 @@ export class HttpClient {
     return this;
   }
 
-  setTimeout(timeout: number): HttpClient {
+  setTimeout(timeout: number) {
     this.config.timeout = timeout;
     return this;
   }
 
-  addRequestInterceptor(interceptor: RequestInterceptor): HttpClient {
+  get getConfig() {
+    return this.config;
+  }
+
+  addRequestInterceptor(interceptor: RequestInterceptor) {
     this.interceptors.request.push(interceptor);
     return this;
   }
 
-  addResponseInterceptor(interceptor: ResponseInterceptor): HttpClient {
+  addResponseInterceptor(interceptor: ResponseInterceptor) {
     this.interceptors.response.push(interceptor);
     return this;
   }
 
-  private async applyRequestInterceptors(config: RequestConfig): Promise<RequestConfig> {
+  private async applyRequestInterceptors(config: RequestConfig) {
     let processedConfig = config;
 
     for (const interceptor of this.interceptors.request) {
@@ -85,7 +99,7 @@ export class HttpClient {
     return processedConfig;
   }
 
-  private async applyResponseInterceptors<T>(response: HttpResponse<T>): Promise<HttpResponse<T>> {
+  private async applyResponseInterceptors<T>(response: HttpResponse<T>) {
     let processedResponse = response;
 
     for (const interceptor of this.interceptors.response) {
@@ -95,13 +109,13 @@ export class HttpClient {
     return processedResponse;
   }
 
-  private async makeRequest<T = any>(config: RequestConfig): Promise<HttpResponse<T>> {
+  private async makeRequest<T = any>(config: RequestConfig) {
     try {
       const mergedConfig: RequestConfig = {
         ...config,
         headers: mergeHeaders(this.config.headers, config.headers),
         params: mergeParams(this.config.params, config.params),
-        timeout: config.timeout || this.config.timeout || 30000,
+        timeout: config.timeout || this.config.timeout || this.initValues.timeout,
       };
 
       const processedConfig = await this.applyRequestInterceptors(mergedConfig);
@@ -167,10 +181,7 @@ export class HttpClient {
     }
   }
 
-  async get<T = any>(
-    url: string,
-    config?: Partial<Omit<RequestConfig, 'method'>>,
-  ): Promise<HttpResponse<T>> {
+  async get<T = any>(url: string, config?: Partial<Omit<RequestConfig, 'method'>>) {
     return this.makeRequest<T>({
       url,
       method: 'GET',
@@ -178,11 +189,7 @@ export class HttpClient {
     });
   }
 
-  async post<T = any>(
-    url: string,
-    body?: any,
-    config?: Partial<Omit<RequestConfig, 'method'>>,
-  ): Promise<HttpResponse<T>> {
+  async post<T = any>(url: string, body?: any, config?: Partial<Omit<RequestConfig, 'method'>>) {
     return this.makeRequest<T>({
       url,
       method: 'POST',
@@ -191,11 +198,7 @@ export class HttpClient {
     });
   }
 
-  async put<T = any>(
-    url: string,
-    body?: any,
-    config?: Partial<Omit<RequestConfig, 'method'>>,
-  ): Promise<HttpResponse<T>> {
+  async put<T = any>(url: string, body?: any, config?: Partial<Omit<RequestConfig, 'method'>>) {
     return this.makeRequest<T>({
       url,
       method: 'PUT',
@@ -204,10 +207,7 @@ export class HttpClient {
     });
   }
 
-  async delete<T = any>(
-    url: string,
-    config?: Partial<Omit<RequestConfig, 'method'>>,
-  ): Promise<HttpResponse<T>> {
+  async delete<T = any>(url: string, config?: Partial<Omit<RequestConfig, 'method'>>) {
     return this.makeRequest<T>({
       url,
       method: 'DELETE',
@@ -215,11 +215,7 @@ export class HttpClient {
     });
   }
 
-  async patch<T = any>(
-    url: string,
-    body?: any,
-    config?: Partial<Omit<RequestConfig, 'method'>>,
-  ): Promise<HttpResponse<T>> {
+  async patch<T = any>(url: string, body?: any, config?: Partial<Omit<RequestConfig, 'method'>>) {
     return this.makeRequest<T>({
       url,
       method: 'PATCH',
@@ -228,10 +224,7 @@ export class HttpClient {
     });
   }
 
-  async head<T = any>(
-    url: string,
-    config?: Partial<Omit<RequestConfig, 'method'>>,
-  ): Promise<HttpResponse<T>> {
+  async head<T = any>(url: string, config?: Partial<Omit<RequestConfig, 'method'>>) {
     return this.makeRequest<T>({
       url,
       method: 'HEAD',
@@ -239,10 +232,7 @@ export class HttpClient {
     });
   }
 
-  async options<T = any>(
-    url: string,
-    config?: Partial<Omit<RequestConfig, 'method'>>,
-  ): Promise<HttpResponse<T>> {
+  async options<T = any>(url: string, config?: Partial<Omit<RequestConfig, 'method'>>) {
     return this.makeRequest<T>({
       url,
       method: 'OPTIONS',
@@ -252,9 +242,5 @@ export class HttpClient {
 
   async request<T = any>(config: RequestConfig): Promise<HttpResponse<T>> {
     return this.makeRequest<T>(config);
-  }
-
-  getConfig(): HttpClientConfig {
-    return this.config;
   }
 }

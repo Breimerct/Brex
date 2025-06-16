@@ -1,7 +1,7 @@
 import { HttpCode } from '../constants';
 import { HttpError, HttpHeaders, QueryParams } from '../types';
 
-export function buildURL(baseURL: string = '', endpoint: string, params?: QueryParams): string {
+export function buildURL(baseURL: string = '', endpoint: string, params?: QueryParams) {
   const cleanBaseURL = baseURL.replace(/\/$/, '');
   const cleanEndpoint = endpoint.replace(/^\//, '');
   let fullURL = cleanBaseURL ? `${cleanBaseURL}/${cleanEndpoint}` : cleanEndpoint;
@@ -20,25 +20,29 @@ export function buildURL(baseURL: string = '', endpoint: string, params?: QueryP
   return fullURL;
 }
 
-export function mergeHeaders(...headerObjects: (HttpHeaders | undefined)[]): HttpHeaders {
-  return headerObjects.reduce<HttpHeaders>((merged, headers) => {
-    if (headers) {
-      return { ...merged, ...headers };
-    }
-    return merged;
-  }, {} as HttpHeaders);
+export function mergeHeaders(...headerObjects: (HttpHeaders | undefined)[]) {
+  return (
+    headerObjects.reduce<HttpHeaders>((merged, headers) => {
+      if (headers) {
+        return { ...merged, ...headers };
+      }
+      return merged;
+    }, {} as HttpHeaders) || {}
+  );
 }
 
-export function mergeParams(...paramObjects: (QueryParams | undefined)[]): QueryParams {
-  return paramObjects.reduce<QueryParams>((merged, params) => {
-    if (params) {
-      return { ...merged, ...params };
-    }
-    return merged;
-  }, {} as QueryParams);
+export function mergeParams(...paramObjects: (QueryParams | undefined)[]) {
+  return (
+    paramObjects.reduce<QueryParams>((merged, params) => {
+      if (params) {
+        return { ...merged, ...params };
+      }
+      return merged;
+    }, {} as QueryParams) || {}
+  );
 }
 
-export function createTimeoutSignal(timeoutMs: number): AbortSignal {
+export function createTimeoutSignal(timeoutMs: number) {
   if (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) {
     return AbortSignal.timeout(timeoutMs);
   }
@@ -48,13 +52,15 @@ export function createTimeoutSignal(timeoutMs: number): AbortSignal {
   return controller.signal;
 }
 
-export function createHttpError(error: any, status: number = 0): HttpError {
+export function createHttpError(error: any, status: number = 0) {
   const message = error?.message || error?.toString() || 'Unknown error';
   const code = HttpCode[status] || 'UNKNOWN_ERROR';
 
-  return {
+  const payload: HttpError = {
     message,
     status,
     code,
   };
+
+  return payload;
 }
