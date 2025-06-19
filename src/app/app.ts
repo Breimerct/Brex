@@ -1,19 +1,19 @@
 import { HttpClient } from '../client';
 
-const defaultHttpClient = new HttpClient();
+const baseHttpClient = new HttpClient();
 
-export const GET = defaultHttpClient.get.bind(defaultHttpClient);
+export const GET = baseHttpClient.get.bind(baseHttpClient);
 
-export const POST = defaultHttpClient.post.bind(defaultHttpClient);
+export const POST = baseHttpClient.post.bind(baseHttpClient);
 
-export const PUT = defaultHttpClient.put.bind(defaultHttpClient);
+export const PUT = baseHttpClient.put.bind(baseHttpClient);
 
-export const DELETE = defaultHttpClient.delete.bind(defaultHttpClient);
+export const DELETE = baseHttpClient.delete.bind(baseHttpClient);
 
-export const PATCH = defaultHttpClient.patch.bind(defaultHttpClient);
+export const PATCH = baseHttpClient.patch.bind(baseHttpClient);
 
-export const HEAD = defaultHttpClient.head.bind(defaultHttpClient);
+export const HEAD = baseHttpClient.head.bind(baseHttpClient);
 
-export const OPTIONS = defaultHttpClient.options.bind(defaultHttpClient);
+export const OPTIONS = baseHttpClient.options.bind(baseHttpClient);
 
 export const createBrex = HttpClient.createBrex;

@@ -69,3 +69,6 @@ export interface HttpClientConfig {
     response?: ResponseInterceptor[];
   };
 }
+
+export type HttpRequestOptions = Partial<Omit<RequestConfig, 'method'>>;
+

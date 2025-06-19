@@ -15,6 +15,7 @@ import {
   RequestConfig,
   HttpClientConfig,
   Interceptors,
+  HttpRequestOptions,
 } from '../types';
 
 export class HttpClient {
@@ -178,7 +179,7 @@ export class HttpClient {
     }
   }
 
-  async get<T = any>(url: string, config?: Partial<Omit<RequestConfig, 'method'>>) {
+  async get<T = any>(url: string, config?: HttpRequestOptions) {
     return this.makeRequest<T>({
       url,
       method: 'GET',
@@ -186,7 +187,7 @@ export class HttpClient {
     });
   }
 
-  async post<T = any>(url: string, body?: any, config?: Partial<Omit<RequestConfig, 'method'>>) {
+  async post<T = any>(url: string, body?: any, config?: HttpRequestOptions) {
     return this.makeRequest<T>({
       url,
       method: 'POST',
@@ -195,7 +196,7 @@ export class HttpClient {
     });
   }
 
-  async put<T = any>(url: string, body?: any, config?: Partial<Omit<RequestConfig, 'method'>>) {
+  async put<T = any>(url: string, body?: any, config?: HttpRequestOptions) {
     return this.makeRequest<T>({
       url,
       method: 'PUT',
@@ -204,7 +205,7 @@ export class HttpClient {
     });
   }
 
-  async delete<T = any>(url: string, config?: Partial<Omit<RequestConfig, 'method'>>) {
+  async delete<T = any>(url: string, config?: HttpRequestOptions) {
     return this.makeRequest<T>({
       url,
       method: 'DELETE',
@@ -212,7 +213,7 @@ export class HttpClient {
     });
   }
 
-  async patch<T = any>(url: string, body?: any, config?: Partial<Omit<RequestConfig, 'method'>>) {
+  async patch<T = any>(url: string, body?: any, config?: HttpRequestOptions) {
     return this.makeRequest<T>({
       url,
       method: 'PATCH',
@@ -221,7 +222,7 @@ export class HttpClient {
     });
   }
 
-  async head<T = any>(url: string, config?: Partial<Omit<RequestConfig, 'method'>>) {
+  async head<T = any>(url: string, config?: HttpRequestOptions) {
     return this.makeRequest<T>({
       url,
       method: 'HEAD',
@@ -229,7 +230,7 @@ export class HttpClient {
     });
   }
 
-  async options<T = any>(url: string, config?: Partial<Omit<RequestConfig, 'method'>>) {
+  async options<T = any>(url: string, config?: HttpRequestOptions) {
     return this.makeRequest<T>({
       url,
       method: 'OPTIONS',
