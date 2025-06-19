@@ -148,6 +148,11 @@ export class HttpClient {
         content = (await response.blob()) as T;
       }
 
+      const headers: HttpHeaders = {};
+      response.headers.forEach((value, key) => {
+        headers[key] = value;
+      });
+
       const httpResponse: HttpResponse<T> = {
         content,
         error: response.ok
@@ -157,6 +162,7 @@ export class HttpClient {
               response.status,
             ),
         status: response.status,
+        headers,
       };
 
       return await this.applyResponseInterceptors(httpResponse);
@@ -164,7 +170,8 @@ export class HttpClient {
       const httpResponse: HttpResponse<T> = {
         content: null as T,
         error: createHttpError(error),
-        status: 0,
+        status: 500,
+        headers: {},
       };
 
       return await this.applyResponseInterceptors(httpResponse);
@@ -232,5 +239,9 @@ export class HttpClient {
 
   async request<T = any>(config: RequestConfig): Promise<HttpResponse<T>> {
     return this.makeRequest<T>(config);
+  }
+
+  static createBrex(config?: HttpClientConfig): HttpClient {
+    return new HttpClient(config);
   }
 }

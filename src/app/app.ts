@@ -1,60 +1,19 @@
 import { HttpClient } from '../client';
-import { HttpClientConfig, HttpResponse, RequestConfig } from '../types';
 
 const defaultHttpClient = new HttpClient();
 
-export const GET = <T = any>(
-  url: string,
-  config?: Partial<Omit<RequestConfig, 'method'>>,
-): Promise<HttpResponse<T>> => {
-  return defaultHttpClient.get<T>(url, config);
-};
+export const GET = defaultHttpClient.get.bind(defaultHttpClient);
 
-export const POST = <T = any>(
-  url: string,
-  body?: any,
-  config?: Partial<Omit<RequestConfig, 'method'>>,
-): Promise<HttpResponse<T>> => {
-  return defaultHttpClient.post<T>(url, body, config);
-};
+export const POST = defaultHttpClient.post.bind(defaultHttpClient);
 
-export const PUT = <T = any>(
-  url: string,
-  body?: any,
-  config?: Partial<Omit<RequestConfig, 'method'>>,
-): Promise<HttpResponse<T>> => {
-  return defaultHttpClient.put<T>(url, body, config);
-};
+export const PUT = defaultHttpClient.put.bind(defaultHttpClient);
 
-export const DELETE = <T = any>(
-  url: string,
-  config?: Partial<Omit<RequestConfig, 'method'>>,
-): Promise<HttpResponse<T>> => {
-  return defaultHttpClient.delete<T>(url, config);
-};
+export const DELETE = defaultHttpClient.delete.bind(defaultHttpClient);
 
-export const PATCH = <T = any>(
-  url: string,
-  body?: any,
-  config?: Partial<Omit<RequestConfig, 'method'>>,
-): Promise<HttpResponse<T>> => {
-  return defaultHttpClient.patch<T>(url, body, config);
-};
+export const PATCH = defaultHttpClient.patch.bind(defaultHttpClient);
 
-export const HEAD = <T = any>(
-  url: string,
-  config?: Partial<Omit<RequestConfig, 'method'>>,
-): Promise<HttpResponse<T>> => {
-  return defaultHttpClient.head<T>(url, config);
-};
+export const HEAD = defaultHttpClient.head.bind(defaultHttpClient);
 
-export const OPTIONS = <T = any>(
-  url: string,
-  config?: Partial<Omit<RequestConfig, 'method'>>,
-): Promise<HttpResponse<T>> => {
-  return defaultHttpClient.options<T>(url, config);
-};
+export const OPTIONS = defaultHttpClient.options.bind(defaultHttpClient);
 
-export const createBrexClient = (config?: HttpClientConfig): HttpClient => {
-  return new HttpClient(config);
-};
+export const createBrex = HttpClient.createBrex;

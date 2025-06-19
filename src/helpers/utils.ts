@@ -52,9 +52,9 @@ export function createTimeoutSignal(timeoutMs: number) {
   return controller.signal;
 }
 
-export function createHttpError(error: any, status: number = 0) {
-  const message = error?.message || error?.toString() || 'Unknown error';
-  const code = HttpCode[status] || 'UNKNOWN_ERROR';
+export function createHttpError(error: any, status: number = 500) {
+  const message = error?.message || error?.toString() || 'Internal Server Error';
+  const code = HttpCode[status];
 
   const payload: HttpError = {
     message,

@@ -36,6 +36,7 @@ export interface HttpResponse<T = any> {
   content: T;
   error: HttpError | null;
   status: number;
+  headers: HttpHeaders;
 }
 
 export type RequestInterceptor = (config: RequestConfig) => RequestConfig | Promise<RequestConfig>;
