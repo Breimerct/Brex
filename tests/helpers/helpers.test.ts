@@ -67,7 +67,7 @@ describe('Helpers', () => {
     const httpError = createHttpError(null, 500);
 
     expect(httpError).toEqual({
-      message: 'Unknown error',
+      message: 'Internal Server Error',
       status: 500,
       code: HttpCode[500],
     });

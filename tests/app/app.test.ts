@@ -1,4 +1,4 @@
-import { createBrexClient, DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT } from '../../src/app';
+import { createBrex, DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT } from '../../src/app';
 
 import { describe, it, expect } from 'vitest';
 
@@ -6,7 +6,7 @@ const baseURL = 'https://jsonplaceholder.typicode.com/';
 
 describe('Base app HTTP Client', () => {
   it('should create a Brex client with default config', async () => {
-    const client = createBrexClient({ baseURL });
+    const client = createBrex({ baseURL });
 
     const response = await client.request({
       method: 'GET',
@@ -106,7 +106,7 @@ describe('Base app HTTP Client', () => {
   });
 
   it('should handle request with timeout', async () => {
-    const client = createBrexClient({ baseURL, timeout: 1000 });
+    const client = createBrex({ baseURL, timeout: 1000 });
 
     const response = await client.request({
       method: 'GET',
