@@ -4,7 +4,15 @@ import { HttpError, HttpHeaders, QueryParams } from '../types';
 export function buildURL(baseURL: string = '', endpoint: string, params?: QueryParams) {
   const cleanBaseURL = baseURL.replace(/\/$/, '');
   const cleanEndpoint = endpoint.replace(/^\//, '');
-  let fullURL = cleanBaseURL ? `${cleanBaseURL}/${cleanEndpoint}` : cleanEndpoint;
+
+  let fullURL: string;
+  if (cleanBaseURL && cleanEndpoint) {
+    fullURL = `${cleanBaseURL}/${cleanEndpoint}`;
+  } else if (cleanBaseURL) {
+    fullURL = cleanBaseURL;
+  } else {
+    fullURL = cleanEndpoint;
+  }
 
   if (params) {
     const validParams = Object.entries(params)
@@ -27,7 +35,7 @@ export function mergeHeaders(...headerObjects: (HttpHeaders | undefined)[]) {
         return { ...merged, ...headers };
       }
       return merged;
-    }, {} as HttpHeaders) || {}
+    }, {}) || {}
   );
 }
 
@@ -38,7 +46,7 @@ export function mergeParams(...paramObjects: (QueryParams | undefined)[]) {
         return { ...merged, ...params };
       }
       return merged;
-    }, {} as QueryParams) || {}
+    }, {}) || {}
   );
 }
 

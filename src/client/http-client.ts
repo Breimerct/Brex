@@ -93,8 +93,18 @@ export class HttpClient {
   private async applyResponseInterceptors<T>(response: HttpResponse<T>) {
     let processedResponse = response;
 
-    for (const interceptor of this.interceptors.response) {
-      processedResponse = await interceptor(processedResponse);
+    try {
+      for (const interceptor of this.interceptors.response) {
+        processedResponse = await interceptor(processedResponse);
+      }
+    } catch (error: any) {
+      // If a response interceptor throws an error, return an error response
+      return {
+        content: null as T,
+        error: createHttpError(error),
+        status: 500,
+        headers: {},
+      };
     }
 
     return processedResponse;
@@ -139,14 +149,20 @@ export class HttpClient {
       const response = await fetchFn(fullURL, fetchOptions);
 
       let content: T;
-      const contentType = response.headers.get('Content-Type') || '';
 
-      if (contentType.includes('application/json')) {
-        content = await response.json();
-      } else if (contentType.includes('text/')) {
-        content = (await response.text()) as T;
+      // HEAD requests should not have a response body
+      if (processedConfig.method === 'HEAD') {
+        content = null as T;
       } else {
-        content = (await response.blob()) as T;
+        const contentType = response.headers.get('Content-Type') || '';
+
+        if (contentType.includes('application/json')) {
+          content = await response.json();
+        } else if (contentType.includes('text/')) {
+          content = (await response.text()) as T;
+        } else {
+          content = (await response.blob()) as T;
+        }
       }
 
       const headers: HttpHeaders = {};
