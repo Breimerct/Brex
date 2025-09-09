@@ -1,6 +1,6 @@
 function isNodeEnvironment() {
   return (
-    typeof process !== 'undefined' && process.versions != null && process.versions.node != null
+    typeof process !== 'undefined' && process.versions !== null && process.versions.node !== null
   );
 }
 

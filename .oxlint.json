@@ -1,0 +1,9 @@
+{
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn",
+    "style": "off",
+    "nursery": "off"
+  }
+}

@@ -71,4 +71,3 @@ export interface HttpClientConfig {
 }
 
 export type HttpRequestOptions = Partial<Omit<RequestConfig, 'method'>>;
-

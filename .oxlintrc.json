@@ -1,15 +1,66 @@
 {
-  "rules": {
-    "no-unused-vars": ["warn"]
-  },
-  "plugins": ["typescript"],
   "env": {
     "es2022": true,
     "node": true,
     "browser": true
   },
-  "parserOptions": {
-    "ecmaVersion": 2022,
-    "sourceType": "module"
-  }
+  "rules": {
+    // Variables esenciales
+    "no-unused-vars": "warn",
+    "no-undef": "error",
+    "no-redeclare": "error",
+    "prefer-const": "error",
+    "no-var": "error",
+
+    // Clases y funciones
+    "no-duplicate-class-members": "error",
+    "no-useless-constructor": "warn",
+    "constructor-super": "error",
+    "no-this-before-super": "error",
+
+    // Control de flujo
+    "no-unreachable": "error",
+    "no-constant-condition": "warn",
+    "no-empty": "warn",
+    "no-fallthrough": "error",
+    "default-case": "warn",
+    "no-duplicate-case": "error",
+
+    // Comparaciones importantes
+    "eqeqeq": "error",
+    "use-isnan": "error",
+    "no-self-compare": "error",
+
+    // Imports y exports
+    "no-duplicate-imports": "error",
+
+    // Legibilidad y estilo
+    "object-shorthand": "warn",
+    "prefer-template": "warn",
+    "no-useless-rename": "warn",
+
+    // Seguridad básica
+    "no-eval": "error",
+    "no-implied-eval": "error",
+    "no-new-func": "error",
+    "no-global-assign": "error",
+
+    // Buenas prácticas
+    "no-console": "warn",
+    "no-debugger": "error",
+    "no-alert": "warn",
+    "no-throw-literal": "error",
+    "no-self-assign": "error",
+    "array-callback-return": "error",
+    "no-return-assign": "error"
+  },
+  "ignorePatterns": [
+    "dist/",
+    "node_modules/",
+    "coverage/",
+    "*.d.ts",
+    "**/*.min.js",
+    "**/*.config.js",
+    "**/*.config.ts"
+  ]
 }
