@@ -1,5 +1,5 @@
-# Auto-increment version, publish NPM and create GitHub Release
-name: Auto Version, Publish and Release
+# Main pipeline - executes all steps sequentially
+name: Main Release Pipeline
 
 on:
   push:
@@ -9,14 +9,16 @@ on:
     types: [closed]
 
 jobs:
-  version-and-publish:
-    # Solo ejecutar en push a main o cuando se hace merge de PR
+  # Step 1: Version Management
+  version:
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event.pull_request.merged == true)
     runs-on: ubuntu-latest
-
     permissions:
       contents: write
-      packages: write
+    outputs:
+      new_version: ${{ steps.version_output.outputs.new_version }}
+      version_bumped: ${{ steps.version_output.outputs.version_bumped }}
+      skip_pipeline: ${{ steps.check_skip.outputs.skip_pipeline }}
 
     steps:
       - name: Checkout code
@@ -29,7 +31,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22.15.0'
-          registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
 
       - name: Configure Git
@@ -37,14 +38,25 @@ jobs:
           git config --local user.email ${{ secrets.GH_EMAIL }}
           git config --local user.name "Breimerct"
 
+      - name: Check if should skip pipeline
+        id: check_skip
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          if [[ $COMMIT_MSG == *"[skip ci]"* ]] || [[ $COMMIT_MSG == *"chore: bump version"* ]]; then
+            echo "skip_pipeline=true" >> $GITHUB_OUTPUT
+            echo "⏭️ Skipping pipeline due to commit message"
+          else
+            echo "skip_pipeline=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Install dependencies
+        if: steps.check_skip.outputs.skip_pipeline == 'false'
         run: npm ci
 
-      # Determinar tipo de version bump basado en el commit
       - name: Determine version bump
+        if: steps.check_skip.outputs.skip_pipeline == 'false'
         id: version_bump
         run: |
-          # Obtener el último commit message
           COMMIT_MSG=$(git log -1 --pretty=%B)
 
           if [[ $COMMIT_MSG == *"BREAKING CHANGE"* ]] || [[ $COMMIT_MSG == *"major:"* ]]; then
@@ -55,54 +67,18 @@ jobs:
             echo "bump=patch" >> $GITHUB_OUTPUT
           fi
 
-      # Obtener la versión anterior para el changelog
-      - name: Get previous version
-        id: prev_version
-        run: |
-          PREV_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          echo "PREV_VERSION=$PREV_VERSION" >> $GITHUB_ENV
-          echo "Previous version: $PREV_VERSION"
-
-      # Incrementar versión
       - name: Bump version
+        if: steps.check_skip.outputs.skip_pipeline == 'false'
+        id: bump
         run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
           npm version ${{ steps.version_bump.outputs.bump }} --no-git-tag-version
           NEW_VERSION=$(node -p "require('./package.json').version")
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          echo "Version bumped from $CURRENT_VERSION to $NEW_VERSION"
 
-      - name: Build project
-        run: npm run build:tsup
-
-      # Generar notas de release automáticamente
-      - name: Generate release notes
-        id: release_notes
-        run: |
-          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
-          echo "## 🚀 What's Changed" >> $GITHUB_ENV
-          echo "" >> $GITHUB_ENV
-
-          # Obtener commits desde la última versión
-          if [ "${{ env.PREV_VERSION }}" != "v0.0.0" ]; then
-            git log ${{ env.PREV_VERSION }}..HEAD --pretty=format:"- %s" --reverse >> $GITHUB_ENV
-          else
-            git log --pretty=format:"- %s" --reverse >> $GITHUB_ENV
-          fi
-
-          echo "" >> $GITHUB_ENV
-          echo "" >> $GITHUB_ENV
-          echo "## 📦 Installation" >> $GITHUB_ENV
-          echo '```bash' >> $GITHUB_ENV
-          echo "npm install $(node -p "require('./package.json').name")@${{ env.NEW_VERSION }}" >> $GITHUB_ENV
-          echo '```' >> $GITHUB_ENV
-          echo "" >> $GITHUB_ENV
-          echo "## 🌐 CDN" >> $GITHUB_ENV
-          echo '```html' >> $GITHUB_ENV
-          echo '<script src="https://cdn.jsdelivr.net/npm/$(node -p "require('\''./package.json'\'').name")@${{ env.NEW_VERSION }}/dist/index.js"></script>' >> $GITHUB_ENV
-          echo '```' >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
-      # Commit y push de la nueva versión
-      - name: Commit version bump
+      - name: Commit and tag
+        if: steps.check_skip.outputs.skip_pipeline == 'false'
         run: |
           git add package.json package-lock.json
           git commit -m "chore: bump version to v${{ env.NEW_VERSION }} [skip ci]"
@@ -110,35 +86,310 @@ jobs:
           git push origin main
           git push origin "v${{ env.NEW_VERSION }}"
 
-      # Publicar en NPM
+      - name: Set outputs
+        id: version_output
+        run: |
+          if [ "${{ steps.check_skip.outputs.skip_pipeline }}" == "false" ]; then
+            echo "new_version=${{ env.NEW_VERSION }}" >> $GITHUB_OUTPUT
+            echo "version_bumped=true" >> $GITHUB_OUTPUT
+            echo "✅ Version: v${{ env.NEW_VERSION }}"
+          else
+            echo "version_bumped=false" >> $GITHUB_OUTPUT
+            echo "⏭️ Pipeline skipped"
+          fi
+
+  # Step 2: Build and Test
+  build:
+    needs: version
+    if: needs.version.outputs.version_bumped == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      build_success: ${{ steps.build_result.outputs.success }}
+
+    steps:
+      - name: Checkout code (with new tag)
+        uses: actions/checkout@v4
+        with:
+          ref: v${{ needs.version.outputs.new_version }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.15.0'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build:tsup
+
+      - name: Run tests (if available)
+        run: |
+          if npm run test --dry-run 2>/dev/null; then
+            npm test
+          else
+            echo "⚠️ No test script found, skipping tests"
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            dist/
+            package.json
+            package-lock.json
+          retention-days: 1
+
+      - name: Build result
+        id: build_result
+        run: |
+          echo "success=true" >> $GITHUB_OUTPUT
+          echo "✅ Build completed successfully"
+
+  # Step 3: Publish to NPM
+  publish-npm:
+    needs: [version, build]
+    if: needs.build.outputs.build_success == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      npm_success: ${{ steps.npm_result.outputs.success }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: v${{ needs.version.outputs.new_version }}
+
+      - name: Setup Node.js for NPM
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.15.0'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fix package.json
+        run: npm pkg fix
+
       - name: Publish to NPM
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Crear GitHub Release con archivos adjuntos
-      - name: Create GitHub Release
+      - name: NPM result
+        id: npm_result
+        run: |
+          echo "success=true" >> $GITHUB_OUTPUT
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          echo "✅ Published to NPM: $PACKAGE_NAME@${{ needs.version.outputs.new_version }}"
+          echo "🔗 https://www.npmjs.com/package/$PACKAGE_NAME"
+
+  # Step 4: Publish to GitHub Packages
+  publish-github:
+    needs: [version, build, publish-npm]
+    if: needs.publish-npm.outputs.npm_success == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    outputs:
+      github_success: ${{ steps.github_result.outputs.success }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: v${{ needs.version.outputs.new_version }}
+
+      - name: Setup Node.js for GitHub Packages
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.15.0'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@${{ github.repository_owner }}'
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure package for GitHub Packages
+        run: |
+          # Backup original
+          cp package.json package.json.backup
+
+          # Get current name
+          CURRENT_NAME=$(node -p "require('./package.json').name")
+
+          # Create scoped name
+          if [[ $CURRENT_NAME == @* ]]; then
+            SCOPED_NAME="$CURRENT_NAME"
+          else
+            SCOPED_NAME="@${{ github.repository_owner }}/$CURRENT_NAME"
+          fi
+
+          # Update package.json
+          node -e "
+            const fs = require('fs');
+            const pkg = require('./package.json');
+            pkg.name = '$SCOPED_NAME';
+            pkg.repository = pkg.repository || 'https://github.com/${{ github.repository }}';
+            pkg.publishConfig = {
+              '@${{ github.repository_owner }}:registry': 'https://npm.pkg.github.com'
+            };
+            fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 2));
+          "
+
+      - name: Publish to GitHub Packages
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: GitHub Packages result
+        id: github_result
+        run: |
+          echo "success=true" >> $GITHUB_OUTPUT
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          echo "✅ Published to GitHub Packages: $PACKAGE_NAME@${{ needs.version.outputs.new_version }}"
+          echo "🔗 https://github.com/${{ github.repository }}/packages"
+
+  # Step 5: Create GitHub Release
+  create-release:
+    needs: [version, build, publish-npm, publish-github]
+    if: needs.publish-github.outputs.github_success == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: v${{ needs.version.outputs.new_version }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.15.0'
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
+      - name: Get previous version for changelog
+        id: prev_version
+        run: |
+          PREV_VERSION=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+          echo "PREV_VERSION=$PREV_VERSION" >> $GITHUB_ENV
+
+      - name: Generate release notes
+        run: |
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+          echo "## 🚀 What's Changed" >> $GITHUB_ENV
+          echo "" >> $GITHUB_ENV
+
+          if [ -n "${{ env.PREV_VERSION }}" ]; then
+            echo "### Commits since ${{ env.PREV_VERSION }}:" >> $GITHUB_ENV
+            git log ${{ env.PREV_VERSION }}..HEAD --pretty=format:"- %s (%h)" --reverse >> $GITHUB_ENV
+          else
+            echo "### All commits:" >> $GITHUB_ENV
+            git log --pretty=format:"- %s (%h)" --reverse >> $GITHUB_ENV
+          fi
+
+          echo "" >> $GITHUB_ENV
+          echo "" >> $GITHUB_ENV
+          echo "## 📦 Installation" >> $GITHUB_ENV
+          echo "" >> $GITHUB_ENV
+          echo "### From NPM (recommended)" >> $GITHUB_ENV
+          echo '```bash' >> $GITHUB_ENV
+          echo "npm install $(node -p "require('./package.json').name")@${{ needs.version.outputs.new_version }}" >> $GITHUB_ENV
+          echo '```' >> $GITHUB_ENV
+          echo "" >> $GITHUB_ENV
+          echo "### From GitHub Packages" >> $GITHUB_ENV
+          echo '```bash' >> $GITHUB_ENV
+          echo "# Configure .npmrc:" >> $GITHUB_ENV
+          echo "echo \"@${{ github.repository_owner }}:registry=https://npm.pkg.github.com\" >> .npmrc" >> $GITHUB_ENV
+          echo "" >> $GITHUB_ENV
+          echo "# Install:" >> $GITHUB_ENV
+          echo "npm install @${{ github.repository_owner }}/$(node -p "require('./package.json').name")@${{ needs.version.outputs.new_version }}" >> $GITHUB_ENV
+          echo '```' >> $GITHUB_ENV
+          echo "" >> $GITHUB_ENV
+          echo "## 🌐 CDN" >> $GITHUB_ENV
+          echo '```html' >> $GITHUB_ENV
+          echo '<script src="https://cdn.jsdelivr.net/npm/$(node -p "require('\''./package.json'\'').name")@${{ needs.version.outputs.new_version }}/dist/index.js"></script>' >> $GITHUB_ENV
+          echo '```' >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ env.NEW_VERSION }}
-          name: Release v${{ env.NEW_VERSION }}
+          tag_name: v${{ needs.version.outputs.new_version }}
+          name: Release v${{ needs.version.outputs.new_version }}
           body: ${{ env.RELEASE_NOTES }}
           draft: false
           prerelease: false
-          generate_release_notes: true # Genera notas adicionales automáticamente
+          generate_release_notes: true
           files: |
-            dist/*.js
-            dist/*.d.ts
+            dist/**/*
             package.json
             README.md
+            LICENSE*
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
-      # Notificación de éxito con links
-      - name: Success notification
+      - name: Release success
         run: |
           echo "✅ Release created successfully!"
-          echo "📦 NPM: https://www.npmjs.com/package/$(node -p "require('./package.json').name")"
-          echo "🏷️ Release: https://github.com/${{ github.repository }}/releases/tag/v${{ env.NEW_VERSION }}"
-          echo "🌐 CDN: https://cdn.jsdelivr.net/npm/$(node -p "require('./package.json').name")@${{ env.NEW_VERSION }}/"
-          echo "🔖 Version: v${{ env.NEW_VERSION }}"
+          echo "🏷️ Release: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.version.outputs.new_version }}"
+
+  # Step 6: Pipeline Summary
+  pipeline-summary:
+    needs: [version, build, publish-npm, publish-github, create-release]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Pipeline Summary
+        run: |
+          echo "## 🚀 Pipeline Execution Summary"
+          echo ""
+
+          if [ "${{ needs.version.outputs.skip_pipeline }}" == "true" ]; then
+            echo "⏭️ **Pipeline Status**: SKIPPED"
+            echo "📝 **Reason**: Commit message contains [skip ci] or version bump"
+          elif [ "${{ needs.create-release.result }}" == "success" ]; then
+            echo "✅ **Pipeline Status**: SUCCESS"
+            echo "🔖 **Version**: v${{ needs.version.outputs.new_version }}"
+            echo ""
+            echo "### ✅ Completed Steps:"
+            echo "1. ✅ Version bumped"
+            echo "2. ✅ Build successful"  
+            echo "3. ✅ Published to NPM"
+            echo "4. ✅ Published to GitHub Packages"
+            echo "5. ✅ GitHub Release created"
+            echo ""
+            echo "### 🔗 Links:"
+            echo "- 📦 [NPM Package](https://www.npmjs.com/package/$(node -p "require('./package.json').name")"
+            echo "- 📦 [GitHub Packages](https://github.com/${{ github.repository }}/packages)"
+            echo "- 🏷️ [Release](https://github.com/${{ github.repository }}/releases/tag/v${{ needs.version.outputs.new_version }})"
+          else
+            echo "❌ **Pipeline Status**: FAILED"
+            echo ""
+            echo "### Step Results:"
+            echo "1. Version: ${{ needs.version.result }}"
+            echo "2. Build: ${{ needs.build.result }}"
+            echo "3. NPM: ${{ needs.publish-npm.result }}"
+            echo "4. GitHub: ${{ needs.publish-github.result }}"
+            echo "5. Release: ${{ needs.create-release.result }}"
+          fi
