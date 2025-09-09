@@ -1,36 +1,74 @@
-# Configuración de Linting
+# Linting and Pre-commit Configuration
 
-Este proyecto usa **oxlint** como linter principal para mantener la calidad del código.
+This project uses **oxlint** as the main linter and **Husky** for Git hooks to ensure code quality.
 
-## Scripts disponibles
+## Available Scripts
 
-- `npm run lint` - Ejecuta el linter y muestra errores/warnings
-- `npm run lint:fix` - Ejecuta el linter y arregla automáticamente los problemas que puede
-- `npm run lint:watch` - Ejecuta el linter en modo watch para desarrollo
-- `npm run check` - Ejecuta tanto el linter como la verificación de formato
-- `npm run check:fix` - Arregla tanto problemas de linting como de formato
+- `npm run lint` - Run linter and show errors/warnings
+- `npm run lint:fix` - Run linter and automatically fix issues that can be fixed
+- `npm run lint:watch` - Run linter in watch mode for development
+- `npm run format` - Format all files with Prettier
+- `npm run format:check` - Check that all files are properly formatted
+- `npm run check` - Run both linter and format verification
+- `npm run check:fix` - Fix both linting and formatting issues
+- `npm run pre-commit` - Run the entire pre-commit flow manually
 
-## Reglas principales
+## Pre-commit Flow
 
-La configuración incluye reglas esenciales para:
+When you run `git commit`, the following flow is automatically executed:
 
-- **Variables**: Evitar variables sin usar, preferir `const` sobre `let`, no usar `var`
-- **Clases**: Evitar miembros duplicados, constructores innecesarios
-- **Control de flujo**: Detectar código inaccesible, casos duplicados en switch
-- **Comparaciones**: Usar `===` en lugar de `==`, validar uso de `isNaN`
-- **Imports**: Evitar imports duplicados
-- **Legibilidad**: Usar object shorthand, template literals, evitar renombres innecesarios
-- **Seguridad**: Evitar `eval`, funciones generadas dinámicamente
-- **Buenas prácticas**: Warnings para `console.log`, errores para `debugger`
+### 1. **Format and verify staged files** (lint-staged)
 
-## Archivos ignorados
+- Format JS/TS files with Prettier
+- Automatically fix linting issues
+- Verify there are no linting errors
+- Format JSON/MD files
 
-- `dist/` - Archivos compilados
-- `node_modules/` - Dependencias
-- `coverage/` - Reportes de cobertura
-- `*.d.ts` - Archivos de definición de tipos
-- `**/*.config.js` y `**/*.config.ts` - Archivos de configuración
+### 2. **Final complete verification**
 
-## Integración con Git
+- Run `npm run check` on the entire project
+- Confirm there are no linting errors
+- Verify all files are properly formatted
 
-Los hooks de Git (via husky y lint-staged) ejecutan automáticamente el linter y prettier en los archivos modificados antes de cada commit.
+### 3. **Commit message validation**
+
+- Use commitlint to verify the message follows conventional commits
+
+If any step fails, the commit is cancelled and you must fix the issues before trying again.
+
+## Main Rules
+
+The configuration includes essential rules for:
+
+- **Variables**: Avoid unused variables, prefer `const` over `let`, don't use `var`
+- **Classes**: Avoid duplicate class members, unnecessary constructors
+- **Control flow**: Detect unreachable code, duplicate cases in switch
+- **Comparisons**: Use `===` instead of `==`, validate `isNaN` usage
+- **Imports**: Avoid duplicate imports
+- **Readability**: Use object shorthand, template literals, avoid unnecessary renaming
+- **Security**: Avoid `eval`, dynamically generated functions
+- **Best practices**: Warnings for `console.log`, errors for `debugger`
+
+## Ignored Files
+
+- `dist/` - Compiled files
+- `node_modules/` - Dependencies
+- `coverage/` - Coverage reports
+- `*.d.ts` - Type definition files
+- `**/*.config.js` and `**/*.config.ts` - Configuration files
+
+## Manual Execution
+
+If you want to run the pre-commit flow without making a commit:
+
+```bash
+npm run pre-commit
+```
+
+## Bypass (not recommended)
+
+If you need to make a commit without running the hooks (emergencies only):
+
+```bash
+git commit --no-verify -m "emergency message"
+```

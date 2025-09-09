@@ -23,10 +23,10 @@ export function getFetch(): typeof fetch {
       return nodeFetch.default || nodeFetch;
     } catch {
       throw new Error(
-        'Fetch no está disponible. Para Node.js < 18, instala node-fetch: npm install node-fetch@2',
+        'Fetch is not available. For Node.js < 18, install node-fetch: npm install node-fetch@2',
       );
     }
   }
 
-  throw new Error('Fetch no está disponible en este entorno');
+  throw new Error('Fetch is not available in this environment');
 }

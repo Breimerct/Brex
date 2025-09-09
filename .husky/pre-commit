@@ -1,1 +1,18 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🚀 Starting pre-commit checks..."
+
+# Step 1: Format and verify staged files
+echo "🎨 Formatting and checking modified files..."
 npx lint-staged
+
+# Step 2: Final complete verification
+echo "✅ Running final project verification..."
+npm run check
+
+# Step 3: Optional - add files formatted by lint-staged
+echo "🔄 Adding formatted files to the commit..."
+git add .
+
+echo "✨ Pre-commit completed successfully!"
