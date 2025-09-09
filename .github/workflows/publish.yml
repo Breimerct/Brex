@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: read
     outputs:
       new_version: ${{ steps.version_output.outputs.new_version }}
       version_bumped: ${{ steps.version_output.outputs.version_bumped }}
@@ -26,6 +27,8 @@ jobs:
         with:
           token: ${{ secrets.GH_TOKEN }}
           fetch-depth: 0
+          # Asegúrate de que tenga permisos de escritura
+          persist-credentials: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -35,6 +38,7 @@ jobs:
 
       - name: Configure Git
         run: |
+          # Usa variables de entorno de GitHub Actions
           git config --local user.email ${{ secrets.GH_EMAIL }}
           git config --local user.name "Breimerct"
 
@@ -83,6 +87,8 @@ jobs:
           git add package.json package-lock.json
           git commit -m "chore: bump version to v${{ env.NEW_VERSION }} [skip ci]"
           git tag "v${{ env.NEW_VERSION }}"
+
+          # Push con el token correcto
           git push origin main
           git push origin "v${{ env.NEW_VERSION }}"
 
@@ -111,6 +117,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: v${{ needs.version.outputs.new_version }}
+          token: ${{ secrets.GH_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -161,6 +168,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: v${{ needs.version.outputs.new_version }}
+          token: ${{ secrets.GH_TOKEN }}
 
       - name: Setup Node.js for NPM
         uses: actions/setup-node@v4
@@ -199,6 +207,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       packages: write
+      contents: read
     outputs:
       github_success: ${{ steps.github_result.outputs.success }}
 
@@ -207,6 +216,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: v${{ needs.version.outputs.new_version }}
+          token: ${{ secrets.GH_TOKEN }}
 
       - name: Setup Node.js for GitHub Packages
         uses: actions/setup-node@v4
@@ -276,6 +286,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: v${{ needs.version.outputs.new_version }}
+          token: ${{ secrets.GH_TOKEN }}
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
